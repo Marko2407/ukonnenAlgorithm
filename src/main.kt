@@ -1,12 +1,11 @@
+val charsRoot = mutableListOf('R', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I')
+
 data class Roots(var root: Char, var chars: MutableList<Leaf> = mutableListOf())
 data class Leaf(
     var leaf: Char,
     var listOfLeaf: MutableList<MutableList<Char>> = mutableListOf(),
     var listAfterNodeCreated: MutableList<MutableList<Char>> = mutableListOf()
 )
-
-val charsRoot =
-    mutableListOf('R', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'O', 'P', 'R', 'S', 'T')
 
 fun createNode() {
     val list = listOfRoots[activeRoot].chars[activeEdge]
