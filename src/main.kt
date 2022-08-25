@@ -11,14 +11,14 @@ val charsRoot =
 fun createNode() {
     val list = listOfRoots[activeRoot].chars[activeEdge]
     val listForLeafs = list.listAfterNodeCreated
-    val length = if (activeLength > 0) activeLength -1 else activeLength
+    val length = if (activeLength > 0) activeLength - 1 else activeLength
 
     list.listOfLeaf.forEach {
         list.listAfterNodeCreated.add(it)
     }
     list.listOfLeaf.clear()
 
-    val firstLeaf = Leaf(listForLeafs[length][0], listForLeafs.subList(1,listForLeafs.lastIndex))
+    val firstLeaf = Leaf(listForLeafs[length][0], listForLeafs.subList(1, listForLeafs.lastIndex))
     val secondLeaf = Leaf(text[activeIndex])
 
     listOfRoots.add(Roots(insertNodeChar(), mutableListOf(firstLeaf, secondLeaf)))
@@ -27,7 +27,7 @@ fun createNode() {
         activeEdge += 1
         activeLength -= 1
     }
-    remaining -=1
+    remaining -= 1
 }
 
 fun insertIntoList() {
@@ -43,10 +43,6 @@ fun insertNodeChar(): Char {
     return rootChar
 }
 
-fun removeFromNode(roots: Roots) {
-    println(roots)
-}
-
 var activeRoot = 0
 var remaining = 0
 var activeEdge = -1
@@ -57,7 +53,6 @@ var listOfCreatedRoots = mutableListOf<Char>()
 var text = "student$"
 
 fun main() {
-
     while (activeIndex < text.length) {
         remaining += 1
         while (remaining > 0) {
@@ -69,7 +64,7 @@ fun main() {
                     activeRoot = listOfCreatedRoots.lastIndex
                 }
                 findCharInListLast()
-            }else{
+            } else {
                 checkSearchedChar()
             }
         }
@@ -163,18 +158,17 @@ fun printResult() {
 }
 
 fun findCharInListLast() {
-
     var isCharFinded = false
-    if (activeEdge != -1){
-    listOfRoots[activeRoot].chars[activeEdge].listOfLeaf.forEach {
-        if (it.contains(text[activeIndex])) isCharFinded = true
-    }
-    insertIntoList()
-    if (!isCharFinded) {
-        createNode()
-        remaining -= 1
-    }
-    }else{
+    if (activeEdge != -1) {
+        listOfRoots[activeRoot].chars[activeEdge].listOfLeaf.forEach {
+            if (it.contains(text[activeIndex])) isCharFinded = true
+        }
+        insertIntoList()
+        if (!isCharFinded) {
+            createNode()
+            remaining -= 1
+        }
+    } else {
         remaining -= 1
     }
 }
