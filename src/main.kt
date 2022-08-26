@@ -9,29 +9,37 @@ data class Leaf(
 
 fun createNode() {
     val list = listOfRoots[activeRoot].chars[activeEdge]
-    val listForLeafs = list.listAfterNodeCreated
-    val length = if (activeLength > 0) activeLength - 1 else activeLength
-
     list.listOfLeaf.forEach {
         list.listAfterNodeCreated.add(it)
     }
-    list.listOfLeaf.clear()
+    val lastIndex = list.listOfLeaf.lastIndex
+    // ostatak
+    val leafList = list.listAfterNodeCreated.subList(activeLength-1, lastIndex + 1)
 
-    val firstLeaf = Leaf(listForLeafs[length][0], listForLeafs.subList(1, listForLeafs.lastIndex))
+    val listOfLeafAfterNode = list.listOfLeaf[0]
+    val leaf = if (list.listOfLeaf.size <= leafList.size) list.leaf else listOfLeafAfterNode[0]
+    val newLeaf = Leaf(leaf,leafList) // ono sto ide u novi root
     val secondLeaf = Leaf(text[activeIndex])
+    listOfRoots.add(Roots(insertNodeChar(), mutableListOf(newLeaf, secondLeaf)))
+    list.listOfLeaf.clear()
+    if (!leafList.contains(list.listAfterNodeCreated[0])){
+        list.listOfLeaf.add(listOfLeafAfterNode)
+    }
 
-    listOfRoots.add(Roots(insertNodeChar(), mutableListOf(firstLeaf, secondLeaf)))
+
+
 
     if (activeRoot == 0) {
         activeEdge += 1
         activeLength -= 1
     }
-    remaining -= 1
 }
 
 fun insertIntoList() {
-    listOfRoots[activeRoot].chars.forEach {
-        it.listOfLeaf.add(mutableListOf(text[activeIndex]))
+    listOfRoots.forEach {
+        it.chars.forEach {
+            it.listOfLeaf.add(mutableListOf(text[activeIndex]))
+        }
     }
 }
 
@@ -50,19 +58,28 @@ var activeIndex = 0
 var listOfRoots = mutableListOf<Roots>()
 var listOfCreatedRoots = mutableListOf<Char>()
 var text = "student$"
+var i = 0
 
 fun main() {
     while (activeIndex < text.length) {
         remaining += 1
         while (remaining > 0) {
             if (activeIndex == text.lastIndex) {
-                if (activeRoot == 0) {
-                    activeLength -= 1
-                } else {
+                //ako je prosao vec jednom onda povecaj edge i smanji len za 1
+                // ako nije root u 0 onda ga prebaci u prethodni i provjeri da li postoji taj znak  ako je je u 0 i ako je len u 0 onda provjeri za taj znak nalazi u rootu ako len nije 0 onda provjeri za taj edge
+                if (i == 1) {
+                    insertIntoList()
+//                    activeLength -= 1
+//                    activeEdge += 1
+                }
+
+                if (activeRoot != 0) {
                     listOfCreatedRoots.removeAt(listOfCreatedRoots.lastIndex)
                     activeRoot = listOfCreatedRoots.lastIndex
                 }
+
                 findCharInListLast()
+                i++
             } else {
                 checkSearchedChar()
             }
@@ -77,65 +94,53 @@ fun checkSearchedChar() {
     if (listOfRoots.isEmpty()) {
         listOfRoots.add(Roots(insertNodeChar(), mutableListOf()))
     } else {
-        findCharInList(activeRoot)
+        insertIntoList()
+        findCharInList()
     }
 }
 
-//nadogradit search kad se ubace nodovi
-fun findCharInList(activeRoot: Int) {
-    val isCharFinded = if (activeEdge == -1) {
+fun findCharInList() {
+    if (findChar()) {
+        activeLength += 1
+        activeIndex += 1
+        remaining += 1
+    } else {
+        if (activeLength > 0) {
+            createNode()
+        } else {
+            listOfRoots[activeRoot].chars.add(Leaf(text[activeIndex]))
+        }
+        remaining -= 1
+    }
+}
+
+fun findChar(): Boolean {
+    return if (activeEdge == -1) {
         var result = false
-        listOfRoots[activeRoot].chars.forEach {
+        listOfRoots[activeRoot].chars.forEachIndexed { index, it ->
             if (it.leaf == text[activeIndex]) {
                 result = true
+                activeEdge = index
             }
         }
         result
     } else {
         var result = false
         listOfRoots[activeRoot].chars[activeEdge].listOfLeaf.forEach {
-            if (it.contains(text[activeIndex])) result = true
+            if (it[0] == text[activeIndex]) {
+                result = true
+            }
+        }
+        if (!result && listOfCreatedRoots.size > 1) {
+            listOfRoots[activeRoot].chars[activeEdge].listAfterNodeCreated.forEach {
+                val firstElement = it[0]
+                if (firstElement == text[activeIndex]) {
+                    result = true
+                    activeEdge = listOfRoots[activeRoot].chars.indexOf(Leaf(firstElement))
+                }
+            }
         }
         result
-    }
-    insertIntoList()
-    if (isCharFinded) {
-        activeEdge = findIndex(listOfRoots[activeRoot])
-        activeLength += 1
-        remaining += 1
-        activeIndex += 1
-    } else {
-        if (activeLength > 0) {
-            createNode()
-            activeLength -= 1
-        } else {
-            if (activeEdge < 0) {
-                listOfRoots[activeRoot].chars.add(Leaf(text[activeIndex]))
-
-            } else {
-                listOfRoots[activeRoot].chars[activeEdge].listOfLeaf.add(mutableListOf(text[activeIndex]))
-            }
-        }
-        remaining -= 1
-    }
-}
-
-fun findIndex(roots: Roots): Int {
-    return if (activeEdge < 0) {
-        var index = 0
-        roots.chars.forEachIndexed { i, it ->
-            if (it.leaf == text[activeIndex]) {
-                index = i
-            }
-        }
-        index
-    } else {
-        roots.chars[activeEdge].listOfLeaf.forEach {
-            if (it.contains(text[activeIndex])) {
-                return activeEdge
-            }
-        }
-        return roots.chars[activeEdge].listOfLeaf[0].indexOf(text[activeIndex])
     }
 }
 
@@ -158,16 +163,19 @@ fun printResult() {
 
 fun findCharInListLast() {
     var isCharFinded = false
-    if (activeEdge != -1) {
-        listOfRoots[activeRoot].chars[activeEdge].listOfLeaf.forEach {
-            if (it.contains(text[activeIndex])) isCharFinded = true
-        }
-        insertIntoList()
+    if (activeLength != 0) {
+        isCharFinded = listOfRoots[activeRoot].chars[activeEdge].listOfLeaf[activeLength].contains(text[activeIndex])
         if (!isCharFinded) {
             createNode()
-            remaining -= 1
         }
     } else {
-        remaining -= 1
+        listOfRoots[activeRoot].chars.forEach {
+            if (it.leaf == text[activeIndex]) isCharFinded = true
+        }
+        if (!isCharFinded) {
+            listOfRoots[activeRoot].chars.add(Leaf(text[activeIndex]))
+        }
     }
+
+    remaining -= 1
 }
