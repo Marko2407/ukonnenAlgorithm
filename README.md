@@ -21,3 +21,4 @@ List: $ Karakteri: \
 
 
 
+Za kreiranje programa je koristen IntelliJ IDEA
